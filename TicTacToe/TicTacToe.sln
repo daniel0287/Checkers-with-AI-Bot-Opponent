@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicTacToe", "TicTacToe\TicTacToe.csproj", "{83E8C15F-B2E0-4F15-BE59-E54E2E12AC6C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp01", "ConsoleApp01\ConsoleApp01.csproj", "{D381829F-B012-4CE1-B6AF-2CD0653E3113}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -8,9 +8,9 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{83E8C15F-B2E0-4F15-BE59-E54E2E12AC6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{83E8C15F-B2E0-4F15-BE59-E54E2E12AC6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{83E8C15F-B2E0-4F15-BE59-E54E2E12AC6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{83E8C15F-B2E0-4F15-BE59-E54E2E12AC6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D381829F-B012-4CE1-B6AF-2CD0653E3113}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D381829F-B012-4CE1-B6AF-2CD0653E3113}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D381829F-B012-4CE1-B6AF-2CD0653E3113}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D381829F-B012-4CE1-B6AF-2CD0653E3113}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
