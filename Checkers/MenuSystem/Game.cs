@@ -1,4 +1,5 @@
-﻿using ConsoleUI;
+﻿using System.Text;
+using ConsoleUI;
 using DAL;
 using DAL.FileSystem;
 using Domain;
@@ -9,12 +10,18 @@ namespace MenuSystem;
 
 public class Game
 {
-    private readonly IGameOptionsRepository _repo = new GameOptionsRepositoryFileSystem();
+    private readonly IGameOptionsRepository _gameOptionsRepo = new GameOptionsRepositoryFileSystem();
+    private readonly ICurrentGameStateOptionsRepository _gameStatesRepo = new GameStateRepositoryFileSystem();
     private CheckersOptions _gameOptions = new CheckersOptions();
+    private CheckersGameState _gameState = new CheckersGameState();
     private CheckersBrain _game = new CheckersBrain(new CheckersOptions());
     private bool _back;
     public void Start()
     {
+        if (!File.Exists("Default Options.json"))
+        {
+           _gameOptionsRepo.SaveGameOptions("Default Options", new CheckersOptions());
+        }
         Title = "Checkers";
         RunMainMenu();
     }
@@ -25,7 +32,7 @@ public class Game
         {
             _back = false;
             string prompt = "   Checkers\n=================";
-            string[] choices = { "New Game", "Load Game", "Options", "Exit" };
+            string[] choices = { "New Game", "Save Game", "Load Game", "Options", "Exit" };
             Menu mainMenu = new Menu(prompt, choices);
             int selectedIndex = mainMenu.Run();
             string outcome = ""; // If empty nothing happens, if back, back was pressed.
@@ -35,12 +42,15 @@ public class Game
                     outcome = RunNewGame();
                     break;
                 case 1:
-                    outcome = LoadGame();
+                    outcome = SaveGame();
                     break;
                 case 2:
-                    outcome = RunOptions();
+                    outcome = LoadGame();
                     break;
                 case 3:
+                    outcome = RunOptions();
+                    break;
+                case 4:
                     ExitGame();
                     break;
             }
@@ -55,85 +65,128 @@ public class Game
     {
         Environment.Exit(0);
     }
-
-    private string RunOptions()
+    
+    private string RunNewGame()
     {
-        string prompt = "   Options\n=================";
-        string[] choices =
+        Clear();
+        if (_gameOptions.Width == 0)
         {
-            "Create options", "List saved options", "Load options", "Delete options", "Save current options",
-            "Edit current options", "Back"
-        };
-        Menu optionsMenu = new Menu(prompt, choices);
-        int selectedIndex = optionsMenu.Run();
-        switch (selectedIndex)
-        {
-            case 0:
-                break;
-            case 1:
-                foreach (var name in _repo.GetGameOptionsList())
-                {
-                    Console.WriteLine(name);
-                }
-                break;
-            case 2:
-                Console.Write("Options name:");
-                var optionsName = Console.ReadLine();
-                if (optionsName != null) _gameOptions = _repo.GetGameOptions(optionsName);
-                break;
-            case 3:
-                break;
-            case 4:
-                break;
-            case 5:
-                break;
-            case 6:
-                return "back";
+            _gameOptions.Width = 8;
         }
+        if (_gameOptions.Height == 0)
+        {
+            _gameOptions.Height = 8;
+        }
+        _game = new CheckersBrain(_gameOptions);
+        Ui.DrawGameBoard(_game.GetBoard());
         return "";
     }
 
+    private string SaveGame()
+    {
+        Clear();
+        Console.WriteLine("   Save Game\n=====================");
+        Console.Write("Game name:");
+        var gameStateName = Console.ReadLine();
+        if (gameStateName != null) _gameStatesRepo.SaveCurrentGameState(gameStateName, _gameState);
+        return "back";
+    }
+    
     private string LoadGame()
     {
         string prompt = "   Load Game\n=================";
-        string[] choices = { "Back" };
+        string[] choices = new string[_gameStatesRepo.GetPreviousGameStatesList().Count + 2];
+        int index = 0;
+        foreach (var state in _gameStatesRepo.GetPreviousGameStatesList())
+        {
+            choices[index] = state;
+            index += 1;
+        }
+        choices[index] = "Delete Load Game";
+        choices[index + 1] = "Back";
         Menu optionsMenu = new Menu(prompt, choices);
         int selectedIndex = optionsMenu.Run();
-        switch (selectedIndex)
+        if (selectedIndex == index)
         {
-            case 0:
-                return "back";
+            return DeleteLoadGame();
         }
+        if (selectedIndex == index + 1)
+        {
+            return "back";
+        }
+        _gameState = _gameStatesRepo.GetGameState(choices[selectedIndex]);
+        RunNewGame();
         return "";
     }
 
-    private string RunNewGame()
+    private string DeleteLoadGame()
     {
-        string prompt = "What board size would you like?\n=================";
-        string[] choices = { "Standard 8x8", "Custom", "Back" };
-        Menu boardSizeMenu = new Menu(prompt, choices);
-        int selectedIndex = boardSizeMenu.Run();
-
-        switch (selectedIndex)
+        string prompt = "Delete Load Game\n=================";
+        string[] choices = new string[_gameStatesRepo.GetPreviousGameStatesList().Count + 1];
+        int index = 0;
+        foreach (var state in _gameStatesRepo.GetPreviousGameStatesList())
         {
-            case 0:
-                var standardOptions = _gameOptions;
-                standardOptions.Width = 8;
-                standardOptions.Height = 8;
-                _game = new CheckersBrain(standardOptions);
-                Clear();
-                Ui.DrawGameBoard(_game.GetBoard());
-                break;
-            case 1:
-                CustomBoard();
-                break;
-            case 2:
-                return "back";
+            choices[index] = state;
+            index += 1;
         }
+        choices[index] = "Back";
+        Menu optionsMenu = new Menu(prompt, choices);
+        int selectedIndex = optionsMenu.Run();
+        if (selectedIndex == index)
+        {
+            return "back";
+        }
+        var stateName = choices[selectedIndex];
+        _gameStatesRepo.DeleteGameStates(stateName);
+        return "back";
+    }
+    
+    private string RunOptions()
+    {
+        do
+        {
+            _back = false;
+            string prompt = "   Options\n=================";
+            string[] choices =
+            {
+                "Create options", "List saved options", "Load options", "Delete options", "Save current options",
+                "Edit current options", "Back"
+            };
+            Menu optionsMenu = new Menu(prompt, choices);
+            int selectedIndex = optionsMenu.Run();
+            string outcome = "";
+            switch (selectedIndex)
+            {
+                case 0:
+                    outcome = CreateGameOptions();
+                    break;
+                case 1:
+                    outcome = ListGameOptions();
+                    break;
+                case 2:
+                    outcome = LoadGameOptions();
+                    break;
+                case 3:
+                    outcome = DeleteGameOptions();
+                    break;
+                case 4:
+                    outcome = SaveCurrentGameOptions();
+                    break;
+                case 5:
+                    outcome = EditCurrentGameOptions();
+                    break;
+                case 6:
+                    return "back";
+            }
+            if (outcome == "back")
+            {
+                _back = true;
+            }
+        } while (_back);
         return "";
     }
-
-    private void CustomBoard()
+    
+    /*private void CustomBoard()
     {
         Clear();
         Console.WriteLine("Board width?");
@@ -162,5 +215,133 @@ public class Game
         options.Height = height;
         _game = new CheckersBrain(options);
         Ui.DrawGameBoard(_game.GetBoard());
+    } */
+
+    string CreateGameOptions()
+    {
+        Clear();
+        Console.WriteLine("  Create Options\n=====================");
+        Console.Write("Board width:");
+        var boardChoice = Console.ReadLine()?.ToUpper().Trim() ?? "";
+        if (boardChoice == "")
+        {
+            throw new ArgumentException("Width can't be empty");
+        }
+        int width = int.Parse(boardChoice);
+        Console.Write("Board height (must be an even number):");
+        boardChoice = Console.ReadLine()?.ToUpper().Trim() ?? "";
+        if (boardChoice == "")
+        {
+            throw new ArgumentException("Height can't be empty;");
+        }
+        int height = int.Parse(boardChoice);
+        CheckersOptions newGameOptions = new CheckersOptions(); 
+        newGameOptions.Width = width;
+        newGameOptions.Height = height;
+        Console.Write("Options name:");
+        var optionsName = Console.ReadLine();
+        if (optionsName != null) _gameOptionsRepo.SaveGameOptions(optionsName, _gameOptions);
+        return "back";
     }
+    
+    string ListGameOptions()
+    {
+        StringBuilder outcome = new StringBuilder();
+        foreach (var name in _gameOptionsRepo.GetGameOptionsList())
+        {
+            outcome.Append(name + "\n");
+        }
+        string prompt = outcome.ToString();
+        string[] choices =
+        {
+            "Back"
+        };
+        Menu optionsMenu = new Menu(prompt, choices);
+        int selectedIndex = optionsMenu.Run();
+        switch (selectedIndex)
+        {
+            case 0:
+                return "back";
+        }
+        return "";
+    }
+
+    string LoadGameOptions()
+    {
+        string prompt = "  Load Options\n=================";
+        string[] choices = new string[_gameOptionsRepo.GetGameOptionsList().Count + 1];
+        int index = 0;
+        foreach (var state in _gameOptionsRepo.GetGameOptionsList())
+        {
+            choices[index] = state;
+            index += 1;
+        }
+        choices[index] = "Back";
+        Menu optionsMenu = new Menu(prompt, choices);
+        int selectedIndex = optionsMenu.Run();
+        if (selectedIndex == index)
+        {
+            return "back";
+        }
+        var optionsName = choices[selectedIndex];
+        _gameOptions = _gameOptionsRepo.GetGameOptions(optionsName);
+        return "back";
+    }
+
+    string DeleteGameOptions()
+    {
+        string prompt = "   Delete Game Options\n=================";
+        string[] choices = new string[_gameOptionsRepo.GetGameOptionsList().Count + 1];
+        int index = 0;
+        foreach (var state in _gameOptionsRepo.GetGameOptionsList())
+        {
+            choices[index] = state;
+            index += 1;
+        }
+        choices[index] = "Back";
+        Menu optionsMenu = new Menu(prompt, choices);
+        int selectedIndex = optionsMenu.Run();
+        if (selectedIndex == index)
+        {
+            return "back";
+        }
+        var optionsName = choices[selectedIndex];
+        _gameOptionsRepo.DeleteGameOptions(optionsName);
+        return "back";
+    }
+
+    string SaveCurrentGameOptions()
+    {
+        Clear();
+        Console.WriteLine("Save Current Options\n=====================");
+        Console.Write("Options name:");
+        var optionsName = Console.ReadLine();
+        if (optionsName != null) _gameOptionsRepo.SaveGameOptions(optionsName, _gameOptions);
+        return "back";
+    }
+
+    string EditCurrentGameOptions()
+    {
+        Clear();
+        Console.WriteLine("Edit Current Options\n=====================");
+        Console.Write("Board width:");
+        var boardChoice = Console.ReadLine()?.ToUpper().Trim() ?? "";
+        if (boardChoice == "")
+        {
+            throw new ArgumentException("Width can't be empty");
+        }
+        int width = int.Parse(boardChoice);
+        Console.Write("Board height (must be an even number):");
+        boardChoice = Console.ReadLine()?.ToUpper().Trim() ?? "";
+        if (boardChoice == "")
+        {
+            throw new ArgumentException("Height can't be empty;");
+        }
+        int height = int.Parse(boardChoice);
+        Clear();
+        _gameOptions.Width = width;
+        _gameOptions.Height = height;
+        return "back";
+    }
+    
 }
