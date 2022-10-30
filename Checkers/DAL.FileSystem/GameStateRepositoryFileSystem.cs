@@ -7,6 +7,7 @@ public class GameStateRepositoryFileSystem : ICurrentGameStateOptionsRepository
     private const string FileExtension = "json";
     private readonly string _statesDirectory = "." + Path.DirectorySeparatorChar + "states";
     
+    public string Name { get; } = "FileSystem";
     public List<string> GetPreviousGameStatesList()
     {
         CheckOrCreateDirectory();
@@ -40,7 +41,7 @@ public class GameStateRepositoryFileSystem : ICurrentGameStateOptionsRepository
         File.WriteAllText(GetFileName(id), fileContent);
     }
 
-    public void DeleteGameStates(string id)
+    public void DeleteGameState(string id)
     {
         File.Delete(GetFileName(id));
     }

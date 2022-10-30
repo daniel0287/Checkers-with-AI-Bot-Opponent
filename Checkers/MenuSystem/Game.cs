@@ -1,26 +1,41 @@
 ﻿using System.Text;
 using ConsoleUI;
 using DAL;
+using DAL.Db;
 using DAL.FileSystem;
 using Domain;
 using GameBrain;
+using Microsoft.EntityFrameworkCore;
 using static System.Console;
 
 namespace MenuSystem;
 
+
+
 public class Game
 {
-    private readonly IGameOptionsRepository _gameOptionsRepo = new GameOptionsRepositoryFileSystem();
-    private readonly ICurrentGameStateOptionsRepository _gameStatesRepo = new GameStateRepositoryFileSystem();
-    private CheckersOptions _gameOptions = new CheckersOptions();
+    private static readonly DbContextOptions<AppDbContext> DbOptions =
+        new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite("Data Source=/Users/danie/RiderProjects/icd0008-2022f/Checkers/app.db")
+            .Options;
+    private static readonly AppDbContext Ctx = new AppDbContext(DbOptions);
+    private readonly IGameOptionsRepository _gameOptionsRepoFs = new GameOptionsRepositoryFileSystem();
+    private readonly ICurrentGameStateOptionsRepository _gameStatesRepoFs = new GameStateRepositoryFileSystem();
+    private static readonly IGameOptionsRepository GameOptionsRepoDb = new GameOptionsRepositoryDb(Ctx);
+    private static readonly ICurrentGameStateOptionsRepository GameStatesRepoDb = new GameStateRepositoryDb(Ctx);
+    private IGameOptionsRepository _gameOptionsRepo = GameOptionsRepoDb;
+    private ICurrentGameStateOptionsRepository _gameStatesRepo = GameStatesRepoDb;
+    private static CheckersOption _gameOption = new CheckersOption();
     private CheckersGameState _gameState = new CheckersGameState();
-    private CheckersBrain _game = new CheckersBrain(new CheckersOptions());
+    private CheckersBrain _game = new CheckersBrain(new CheckersOption());
     private bool _back;
     public void Start()
     {
+        _gameOption.Name = "Default Options";
+        GameOptionsRepoDb.SaveGameOptions(_gameOption.Name, _gameOption);
         if (!File.Exists("Default Options.json"))
         {
-           _gameOptionsRepo.SaveGameOptions("Default Options", new CheckersOptions());
+           _gameOptionsRepoFs.SaveGameOptions("Default Options", new CheckersOption());
         }
         Title = "Checkers";
         RunMainMenu();
@@ -31,11 +46,11 @@ public class Game
         do
         {
             _back = false;
-            string prompt = "   Checkers\n=================";
+            const string prompt = "   Checkers\n=================";
             string[] choices = { "New Game", "Save Game", "Load Game", "Options", "Exit" };
-            Menu mainMenu = new Menu(prompt, choices);
-            int selectedIndex = mainMenu.Run();
-            string outcome = ""; // If empty nothing happens, if back, back was pressed.
+            var mainMenu = new Menu(prompt, choices);
+            var selectedIndex = mainMenu.Run();
+            var outcome = ""; // If empty nothing happens, if back, back was pressed.
             switch (selectedIndex)
             {
                 case 0:
@@ -61,7 +76,7 @@ public class Game
         } while (_back);
     }
 
-    private void ExitGame()
+    private static void ExitGame()
     {
         Environment.Exit(0);
     }
@@ -69,15 +84,15 @@ public class Game
     private string RunNewGame()
     {
         Clear();
-        if (_gameOptions.Width == 0)
+        if (_gameOption.Width == 0)
         {
-            _gameOptions.Width = 8;
+            _gameOption.Width = 8;
         }
-        if (_gameOptions.Height == 0)
+        if (_gameOption.Height == 0)
         {
-            _gameOptions.Height = 8;
+            _gameOption.Height = 8;
         }
-        _game = new CheckersBrain(_gameOptions);
+        _game = new CheckersBrain(_gameOption);
         Ui.DrawGameBoard(_game.GetBoard());
         return "";
     }
@@ -88,15 +103,17 @@ public class Game
         Console.WriteLine("   Save Game\n=====================");
         Console.Write("Game name:");
         var gameStateName = Console.ReadLine();
+        _gameState.Name = gameStateName!;
+        _gameState.SerializedGameState = System.Text.Json.JsonSerializer.Serialize(_gameState);
         if (gameStateName != null) _gameStatesRepo.SaveCurrentGameState(gameStateName, _gameState);
         return "back";
     }
-    
+
     private string LoadGame()
     {
-        string prompt = "   Load Game\n=================";
-        string[] choices = new string[_gameStatesRepo.GetPreviousGameStatesList().Count + 2];
-        int index = 0;
+        const string prompt = "   Load Game\n=================";
+        var choices = new string[_gameStatesRepo.GetPreviousGameStatesList().Count + 2];
+        var index = 0;
         foreach (var state in _gameStatesRepo.GetPreviousGameStatesList())
         {
             choices[index] = state;
@@ -104,8 +121,8 @@ public class Game
         }
         choices[index] = "Delete Load Game";
         choices[index + 1] = "Back";
-        Menu optionsMenu = new Menu(prompt, choices);
-        int selectedIndex = optionsMenu.Run();
+        var optionsMenu = new Menu(prompt, choices);
+        var selectedIndex = optionsMenu.Run();
         if (selectedIndex == index)
         {
             return DeleteLoadGame();
@@ -121,23 +138,23 @@ public class Game
 
     private string DeleteLoadGame()
     {
-        string prompt = "Delete Load Game\n=================";
-        string[] choices = new string[_gameStatesRepo.GetPreviousGameStatesList().Count + 1];
-        int index = 0;
+        const string prompt = "Delete Load Game\n=================";
+        var choices = new string[_gameStatesRepo.GetPreviousGameStatesList().Count + 1];
+        var index = 0;
         foreach (var state in _gameStatesRepo.GetPreviousGameStatesList())
         {
             choices[index] = state;
             index += 1;
         }
         choices[index] = "Back";
-        Menu optionsMenu = new Menu(prompt, choices);
-        int selectedIndex = optionsMenu.Run();
+        var optionsMenu = new Menu(prompt, choices);
+        var selectedIndex = optionsMenu.Run();
         if (selectedIndex == index)
         {
             return "back";
         }
         var stateName = choices[selectedIndex];
-        _gameStatesRepo.DeleteGameStates(stateName);
+        _gameStatesRepo.DeleteGameState(stateName);
         return "back";
     }
     
@@ -146,15 +163,15 @@ public class Game
         do
         {
             _back = false;
-            string prompt = "   Options\n=================";
+            const string prompt = "   Options\n=================";
             string[] choices =
             {
                 "Create options", "List saved options", "Load options", "Delete options", "Save current options",
-                "Edit current options", "Back"
+                "Edit current options", "Persistence method swap", "Back"
             };
-            Menu optionsMenu = new Menu(prompt, choices);
-            int selectedIndex = optionsMenu.Run();
-            string outcome = "";
+            var optionsMenu = new Menu(prompt, choices);
+            var selectedIndex = optionsMenu.Run();
+            var outcome = "";
             switch (selectedIndex)
             {
                 case 0:
@@ -176,6 +193,9 @@ public class Game
                     outcome = EditCurrentGameOptions();
                     break;
                 case 6:
+                    outcome = SwapPersistenceEngine();
+                    break;
+                case 7:
                     return "back";
             }
             if (outcome == "back")
@@ -185,39 +205,8 @@ public class Game
         } while (_back);
         return "";
     }
-    
-    /*private void CustomBoard()
-    {
-        Clear();
-        Console.WriteLine("Board width?");
-        Console.WriteLine("-------------------");
-        Console.Write("Your choice:");
-        var boardChoice = Console.ReadLine()?.ToUpper().Trim() ?? "";
-        if (boardChoice == "")
-        {
-            throw new ArgumentException("Width can't be empty");
-        }
-        int width = int.Parse(boardChoice);
-        
-        Clear();
-        Console.WriteLine("Board height (must be an even number)");
-        Console.WriteLine("-------------------");
-        Console.Write("Your choice:");
-        boardChoice = Console.ReadLine()?.ToUpper().Trim() ?? "";
-        if (boardChoice == "")
-        {
-            throw new ArgumentException("Height can't be empty;");
-        }
-        int height = int.Parse(boardChoice);
-        Clear();
-        var options = _gameOptions;
-        options.Width = width;
-        options.Height = height;
-        _game = new CheckersBrain(options);
-        Ui.DrawGameBoard(_game.GetBoard());
-    } */
 
-    string CreateGameOptions()
+    private string CreateGameOptions()
     {
         Clear();
         Console.WriteLine("  Create Options\n=====================");
@@ -227,80 +216,83 @@ public class Game
         {
             throw new ArgumentException("Width can't be empty");
         }
-        int width = int.Parse(boardChoice);
+        var width = int.Parse(boardChoice);
         Console.Write("Board height (must be an even number):");
         boardChoice = Console.ReadLine()?.ToUpper().Trim() ?? "";
         if (boardChoice == "")
         {
             throw new ArgumentException("Height can't be empty;");
         }
-        int height = int.Parse(boardChoice);
-        CheckersOptions newGameOptions = new CheckersOptions(); 
-        newGameOptions.Width = width;
-        newGameOptions.Height = height;
+        var height = int.Parse(boardChoice);
         Console.Write("Options name:");
         var optionsName = Console.ReadLine();
-        if (optionsName != null) _gameOptionsRepo.SaveGameOptions(optionsName, _gameOptions);
+        var newGameOption = new CheckersOption
+        {
+            Width = width,
+            Height = height,
+            Name = optionsName!
+        };
+        
+        if (optionsName != null) _gameOptionsRepo.SaveGameOptions(optionsName, newGameOption);
         return "back";
     }
-    
-    string ListGameOptions()
+
+    private string ListGameOptions()
     {
-        StringBuilder outcome = new StringBuilder();
+        var outcome = new StringBuilder();
         foreach (var name in _gameOptionsRepo.GetGameOptionsList())
         {
             outcome.Append(name + "\n");
         }
-        string prompt = outcome.ToString();
+        var prompt = outcome.ToString();
         string[] choices =
         {
             "Back"
         };
-        Menu optionsMenu = new Menu(prompt, choices);
-        int selectedIndex = optionsMenu.Run();
-        switch (selectedIndex)
+        var optionsMenu = new Menu(prompt, choices);
+        var selectedIndex = optionsMenu.Run();
+        return selectedIndex switch
         {
-            case 0:
-                return "back";
-        }
-        return "";
+            0 => "back",
+            _ => ""
+        };
     }
 
-    string LoadGameOptions()
+    private string LoadGameOptions()
     {
-        string prompt = "  Load Options\n=================";
-        string[] choices = new string[_gameOptionsRepo.GetGameOptionsList().Count + 1];
-        int index = 0;
+        const string prompt = "  Load Options\n=================";
+        var choices = new string[_gameOptionsRepo.GetGameOptionsList().Count + 1];
+        var index = 0;
         foreach (var state in _gameOptionsRepo.GetGameOptionsList())
         {
             choices[index] = state;
             index += 1;
         }
         choices[index] = "Back";
-        Menu optionsMenu = new Menu(prompt, choices);
-        int selectedIndex = optionsMenu.Run();
+        var optionsMenu = new Menu(prompt, choices);
+        var selectedIndex = optionsMenu.Run();
         if (selectedIndex == index)
         {
             return "back";
         }
         var optionsName = choices[selectedIndex];
-        _gameOptions = _gameOptionsRepo.GetGameOptions(optionsName);
+        _gameOption = _gameOptionsRepo.GetGameOptions(optionsName);
         return "back";
     }
 
-    string DeleteGameOptions()
+    private string DeleteGameOptions()
     {
-        string prompt = "   Delete Game Options\n=================";
-        string[] choices = new string[_gameOptionsRepo.GetGameOptionsList().Count + 1];
-        int index = 0;
+        const string prompt = "   Delete Game Options\n=================";
+        var choices = new string[_gameOptionsRepo.GetGameOptionsList().Count + 1];
+        var index = 0;
         foreach (var state in _gameOptionsRepo.GetGameOptionsList())
         {
             choices[index] = state;
             index += 1;
         }
         choices[index] = "Back";
-        Menu optionsMenu = new Menu(prompt, choices);
-        int selectedIndex = optionsMenu.Run();
+        var optionsMenu = new Menu(prompt, choices);
+        var selectedIndex = optionsMenu.Run();
         if (selectedIndex == index)
         {
             return "back";
@@ -310,17 +302,18 @@ public class Game
         return "back";
     }
 
-    string SaveCurrentGameOptions()
+    private string SaveCurrentGameOptions()
     {
         Clear();
         Console.WriteLine("Save Current Options\n=====================");
         Console.Write("Options name:");
         var optionsName = Console.ReadLine();
-        if (optionsName != null) _gameOptionsRepo.SaveGameOptions(optionsName, _gameOptions);
+        _gameOption.Name = optionsName!;
+        if (optionsName != null) _gameOptionsRepo.SaveGameOptions(optionsName, _gameOption);
         return "back";
     }
 
-    string EditCurrentGameOptions()
+    private static string EditCurrentGameOptions()
     {
         Clear();
         Console.WriteLine("Edit Current Options\n=====================");
@@ -330,17 +323,43 @@ public class Game
         {
             throw new ArgumentException("Width can't be empty");
         }
-        int width = int.Parse(boardChoice);
+        var width = int.Parse(boardChoice);
         Console.Write("Board height (must be an even number):");
         boardChoice = Console.ReadLine()?.ToUpper().Trim() ?? "";
         if (boardChoice == "")
         {
             throw new ArgumentException("Height can't be empty;");
         }
-        int height = int.Parse(boardChoice);
+        var height = int.Parse(boardChoice);
         Clear();
-        _gameOptions.Width = width;
-        _gameOptions.Height = height;
+        _gameOption.Width = width;
+        _gameOption.Height = height;
+        return "back";
+    }
+
+    private string SwapPersistenceEngine()
+    {
+        var currentEngine = _gameOptionsRepo == GameOptionsRepoDb ? "Database" : "FileSystem";
+        var prompt = "Swap Persistence Engine\nCurrent Engine: " + currentEngine + "\n========================";
+        string[] choices = { "FileSystem", "DataBase", "back" };
+        var optionsMenu = new Menu(prompt, choices);
+        var selectedIndex = optionsMenu.Run();
+        if (selectedIndex == 2)
+        {
+            return "back";
+        }
+        var optionsName = choices[selectedIndex];
+
+        if (optionsName == "FileSystem")
+        {
+            _gameOptionsRepo = _gameOptionsRepoFs;
+            _gameStatesRepo = _gameStatesRepoFs;
+        }
+        else
+        {
+            _gameOptionsRepo = GameOptionsRepoDb;
+            _gameStatesRepo = GameStatesRepoDb;
+        }
         return "back";
     }
     

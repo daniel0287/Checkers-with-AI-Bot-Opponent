@@ -14,5 +14,5 @@ public interface ICurrentGameStateOptionsRepository
     void SaveCurrentGameState(string id, CheckersGameState state);
     
     // delete
-    void DeleteGameStates(string id);
+    void DeleteGameState(string id);
 }
