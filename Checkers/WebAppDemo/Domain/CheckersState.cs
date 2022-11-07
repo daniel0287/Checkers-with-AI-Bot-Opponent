@@ -1,4 +1,4 @@
-﻿namespace Domain;
+﻿namespace WebAppDemo.Domain;
 
 public class CheckersState
 {
