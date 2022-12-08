@@ -8,7 +8,7 @@ public class GameStateRepositoryFileSystem : ICurrentGameStateOptionsRepository
     private readonly string _statesDirectory = "." + Path.DirectorySeparatorChar + "states";
     
     public string Name { get; } = "FileSystem";
-    public List<string> GetPreviousGameStatesList()
+    public List<string?> GetPreviousGameStatesList()
     {
         CheckOrCreateDirectory();
         

@@ -13,7 +13,7 @@ public class GameStateRepositoryDb : ICurrentGameStateOptionsRepository
     
     public string Name { get; } = "DB";
     
-    public List<string> GetPreviousGameStatesList() =>
+    public List<string?> GetPreviousGameStatesList() =>
         _dbContext
             .CheckersGameStates
             .OrderBy(o => o.Name)

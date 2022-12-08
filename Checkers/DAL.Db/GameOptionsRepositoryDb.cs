@@ -2,19 +2,14 @@
 
 namespace DAL.Db;
 
-public class GameOptionsRepositoryDb : IGameOptionsRepository
+public class GameOptionsRepositoryDb : BaseRepository, IGameOptionsRepository
 {
-    private readonly AppDbContext _dbContext;
-    
-    public GameOptionsRepositoryDb(AppDbContext dbContext)
+    public GameOptionsRepositoryDb(AppDbContext dbContext) : base(dbContext)
     {
-        _dbContext = dbContext;
     }
     
-    public string Name { get; } = "DB";
-    
     public List<string> GetGameOptionsList() =>
-        _dbContext
+        Ctx
             .CheckersOptions
             .OrderBy(o => o.Name)
             .Select(o => o.Name)
@@ -22,20 +17,20 @@ public class GameOptionsRepositoryDb : IGameOptionsRepository
 
     public CheckersOption GetGameOptions(string id)
     {
-        return _dbContext
+        return Ctx
             .CheckersOptions
             .First(o => o.Name == id);
     }
 
     public void SaveGameOptions(string id, CheckersOption option)
     {
-        var optionsFromDb = _dbContext
+        var optionsFromDb = Ctx
             .CheckersOptions
             .FirstOrDefault(o => o.Name == id);
         if (optionsFromDb == null)
         {
-            _dbContext.CheckersOptions.Add(option);
-            _dbContext.SaveChanges();
+            Ctx.CheckersOptions.Add(option);
+            Ctx.SaveChanges();
             return;
         }
 
@@ -45,13 +40,13 @@ public class GameOptionsRepositoryDb : IGameOptionsRepository
         optionsFromDb.RandomMoves = option.RandomMoves;
         optionsFromDb.WhiteStarts = option.WhiteStarts;
 
-        _dbContext.SaveChanges();
+        Ctx.SaveChanges();
     }
 
     public void DeleteGameOptions(string id)
     {
         var optionsFromDb = GetGameOptions(id);
-        _dbContext.CheckersOptions.Remove(optionsFromDb);
-        _dbContext.SaveChanges();
+        Ctx.CheckersOptions.Remove(optionsFromDb);
+        Ctx.SaveChanges();
     }
 }

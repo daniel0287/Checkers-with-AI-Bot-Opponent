@@ -2,8 +2,14 @@
 
 public enum EGamePiece
 {
-    WhiteStandard,
+    Unknown,
+    Forced,
+    RedStandard,
     BlackStandard,
-    WhiteCheckers,
-    BlackCheckers
+    RedKing,
+    BlackKing,
+    SelectedRedStandard,
+    SelectedBlackStandard,
+    SelectedRedKing,
+    SelectedBlackKing
 }

@@ -27,7 +27,7 @@ public class Game
     private ICurrentGameStateOptionsRepository _gameStatesRepo = GameStatesRepoDb;
     private static CheckersOption _gameOption = new CheckersOption();
     private CheckersGameState _gameState = new CheckersGameState();
-    private CheckersBrain _game = new CheckersBrain(new CheckersOption());
+    private CheckersBrain _game = new CheckersBrain(new CheckersOption(), null);
     private bool _back;
     public void Start()
     {
@@ -92,7 +92,7 @@ public class Game
         {
             _gameOption.Height = 8;
         }
-        _game = new CheckersBrain(_gameOption);
+        _game = new CheckersBrain(_gameOption, null);
         Ui.DrawGameBoard(_game.GetBoard());
         return "";
     }

@@ -7,7 +7,7 @@ public interface ICurrentGameStateOptionsRepository
     // crud methods
 
     //read
-    List<string> GetPreviousGameStatesList();
+    List<string?> GetPreviousGameStatesList();
     CheckersGameState GetGameState(string id);
     
     // create and update

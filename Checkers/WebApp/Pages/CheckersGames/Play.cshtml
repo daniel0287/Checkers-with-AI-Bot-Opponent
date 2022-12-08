@@ -1,0 +1,108 @@
+﻿@page
+@using Domain
+@model WebApp.Pages_CheckersGames.Play
+
+
+<h2>Next move: @(Model.Brain.NextMoveByBlack() ? $"Player B - {Model.CheckersGame.Player2Name} - BLACK" : $"Player A - {Model.CheckersGame.Player1Name} - RED")</h2>
+@*<table class="table table-bordered game-table">
+    @for (var y = 0; y < Model.Brain.GetBoard()[0].Length; y++)
+    {
+        <tr>
+            @for (var x = 0; x < Model.Brain.GetBoard().Length; x++)
+            {
+                if (y % 2 == 0)
+                {
+                    if (x % 2 == 0)
+                    {
+                        <td class="game-table-cell game-table-cell-black">
+                        </td>
+                    }
+                    else
+                    {
+                        <td class="game-table-cell game-table-cell-white">
+                        </td>
+                    }
+                }
+                else
+                {
+                    if (x % 2 == 0)
+                    {
+                        <td class="game-table-cell game-table-cell-white">
+                        </td>
+                    }
+                    else
+                    {
+                        <td class="game-table-cell game-table-cell-black">
+                        </td>
+                    } 
+                }
+                
+                // <td class="game-table-cell @GetCellBgrClass(Model.Brain.GetBoard()[x][y])" onclick="window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&x=@x&y=@y'">
+                // </td>
+            }
+        </tr>
+    }
+</table>*@
+
+<table>
+    @for (var y = 0; y < Model.Brain.GetBoard()[0].Length; y++)
+        {
+            <tr>
+                @for (var x = 0; x < Model.Brain.GetBoard().Length; x++)
+                {
+                    if (y % 2 == 0)
+                    {
+                        if (x % 2 == 0)
+                        {
+                            <td class="noPieceHere" onclick="window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&x=@x&y=@y'">
+                            </td>
+                        }
+                        else
+                        {
+                            <td class="@CheckIfUnknown(Model.Brain.GetBoard()[x][y])" onclick="window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&x=@x&y=@y'"><span class="@GetCellBgrClass(Model.Brain.GetBoard()[x][y])"></span></td>
+                        }
+                    }
+                    else
+                    {
+                        if (x % 2 == 0)
+                        {
+                            <td class="@CheckIfUnknown(Model.Brain.GetBoard()[x][y])" onclick="window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&x=@x&y=@y'"><span class="@GetCellBgrClass(Model.Brain.GetBoard()[x][y])"></span></td>
+                        }
+                        else
+                        {
+                            <td class="noPieceHere" onclick="window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&x=@x&y=@y'">
+                            </td>
+                        }
+                    }
+                }
+            </tr>
+        }
+</table>
+
+
+
+
+
+@functions
+{
+    string GetCellBgrClass(EGamePiece? piece)
+    {
+        if (piece == null) return "noPieceHere";
+        if (piece == EGamePiece.BlackStandard) return "black-piece";
+        if (piece == EGamePiece.RedStandard) return "red-piece";
+        if (piece == EGamePiece.SelectedRedStandard) return "red-piece picked";
+        if (piece == EGamePiece.SelectedBlackStandard) return "black-piece picked";
+        if (piece == EGamePiece.RedKing) return "red-king";
+        if (piece == EGamePiece.BlackKing) return "black-king";
+        if (piece == EGamePiece.SelectedRedKing) return "red-king picked";
+        if (piece == EGamePiece.SelectedBlackKing) return "black-king picked";
+        return "unknown";
+    }
+
+    string CheckIfUnknown(EGamePiece? piece)
+    {
+        if (piece == EGamePiece.Unknown) return "unknown";
+        if (piece == EGamePiece.Forced) return "forced";
+        return "";
+    }
+}
