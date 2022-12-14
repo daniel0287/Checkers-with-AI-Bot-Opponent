@@ -37,8 +37,6 @@ public class GameOptionsRepositoryDb : BaseRepository, IGameOptionsRepository
         optionsFromDb.Name = option.Name;
         optionsFromDb.Width = option.Width;
         optionsFromDb.Height = option.Height;
-        optionsFromDb.RandomMoves = option.RandomMoves;
-        optionsFromDb.WhiteStarts = option.WhiteStarts;
 
         Ctx.SaveChanges();
     }

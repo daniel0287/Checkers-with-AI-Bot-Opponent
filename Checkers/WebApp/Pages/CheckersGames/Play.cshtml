@@ -3,8 +3,25 @@
 @model WebApp.Pages_CheckersGames.Play
 
 
-<h2>Next move: @(Model.Brain.NextMoveByBlack() ? $"Player B - {Model.CheckersGame.Player2Name} - BLACK" : $"Player A - {Model.CheckersGame.Player1Name} - RED")</h2>
-@*<table class="table table-bordered game-table">
+@if (CheckIfGameOver())
+{
+    SaveOutcome();
+    <h3><b>GAME OVER!</b></h3>
+    <h3><b>@(Model.Brain.NextMoveByBlack() ? Model.CheckersGame.Player1Name : Model.CheckersGame.Player2Name) WON!</b></h3>
+    <div>
+        <a asp-page="/CheckersGames/Create">Start a new game</a>
+        <br/>
+        <a asp-page="/CheckersGames/Index">List games</a>
+        <br/>
+    </div>
+}
+else
+{
+    <h1>Playing as: @GetPlayerName() (@(Model.PlayerNo == 0 ? "red" : "black"))</h1>
+    <h2>Your status: @GetPlayerMoveStatus()</h2>
+}
+
+<table>
     @for (var y = 0; y < Model.Brain.GetBoard()[0].Length; y++)
     {
         <tr>
@@ -14,12 +31,25 @@
                 {
                     if (x % 2 == 0)
                     {
-                        <td class="game-table-cell game-table-cell-black">
+                        <td class="noPieceHere"
+                            @if (IsPlayerMove())
+                            {
+                                <text>
+                                    onclick="window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&playerNo=@Model.PlayerNo&x=@x&y=@y'"
+                                </text>
+                            }>
                         </td>
                     }
                     else
                     {
-                        <td class="game-table-cell game-table-cell-white">
+                        <td class="@CheckIfUnknown(Model.Brain.GetBoard()[x][y])"
+                            @if (IsPlayerMove())
+                            {
+                                <text>
+                                    onclick="window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&playerNo=@Model.PlayerNo&x=@x&y=@y'"
+                                </text>
+                            }>
+                            <span class="@GetCellBgrClass(Model.Brain.GetBoard()[x][y])"></span>
                         </td>
                     }
                 }
@@ -27,82 +57,157 @@
                 {
                     if (x % 2 == 0)
                     {
-                        <td class="game-table-cell game-table-cell-white">
+                        <td class="@CheckIfUnknown(Model.Brain.GetBoard()[x][y])"
+                            @if (IsPlayerMove())
+                            {
+                                <text>
+                                    onclick="window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&playerNo=@Model.PlayerNo&x=@x&y=@y'"
+                                </text>
+                            }>
+                            <span class="@GetCellBgrClass(Model.Brain.GetBoard()[x][y])"></span>
                         </td>
                     }
                     else
                     {
-                        <td class="game-table-cell game-table-cell-black">
+                        <td class="noPieceHere"
+                            @if (IsPlayerMove())
+                               {
+                                <text>
+                                    onclick="window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&playerNo=@Model.PlayerNo&x=@x&y=@y'"
+                                </text>
+                            }>
                         </td>
-                    } 
+                    }
                 }
-                
-                // <td class="game-table-cell @GetCellBgrClass(Model.Brain.GetBoard()[x][y])" onclick="window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&x=@x&y=@y'">
-                // </td>
             }
         </tr>
     }
-</table>*@
-
-<table>
-    @for (var y = 0; y < Model.Brain.GetBoard()[0].Length; y++)
-        {
-            <tr>
-                @for (var x = 0; x < Model.Brain.GetBoard().Length; x++)
-                {
-                    if (y % 2 == 0)
-                    {
-                        if (x % 2 == 0)
-                        {
-                            <td class="noPieceHere" onclick="window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&x=@x&y=@y'">
-                            </td>
-                        }
-                        else
-                        {
-                            <td class="@CheckIfUnknown(Model.Brain.GetBoard()[x][y])" onclick="window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&x=@x&y=@y'"><span class="@GetCellBgrClass(Model.Brain.GetBoard()[x][y])"></span></td>
-                        }
-                    }
-                    else
-                    {
-                        if (x % 2 == 0)
-                        {
-                            <td class="@CheckIfUnknown(Model.Brain.GetBoard()[x][y])" onclick="window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&x=@x&y=@y'"><span class="@GetCellBgrClass(Model.Brain.GetBoard()[x][y])"></span></td>
-                        }
-                        else
-                        {
-                            <td class="noPieceHere" onclick="window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&x=@x&y=@y'">
-                            </td>
-                        }
-                    }
-                }
-            </tr>
-        }
 </table>
-
-
-
-
+@section Scripts
+{
+    @if (!IsPlayerMove() || IsAiMove())
+    {
+        <script>
+            setTimeout( () => {
+               window.location = '/CheckersGames/Play?id=@Model.CheckersGame.Id&playerNo=@Model.PlayerNo&checkAi=true';
+            }, 1000);
+        </script>
+    }
+}
 
 @functions
 {
     string GetCellBgrClass(EGamePiece? piece)
     {
         if (piece == null) return "noPieceHere";
-        if (piece == EGamePiece.BlackStandard) return "black-piece";
-        if (piece == EGamePiece.RedStandard) return "red-piece";
-        if (piece == EGamePiece.SelectedRedStandard) return "red-piece picked";
-        if (piece == EGamePiece.SelectedBlackStandard) return "black-piece picked";
-        if (piece == EGamePiece.RedKing) return "red-king";
-        if (piece == EGamePiece.BlackKing) return "black-king";
-        if (piece == EGamePiece.SelectedRedKing) return "red-king picked";
-        if (piece == EGamePiece.SelectedBlackKing) return "black-king picked";
+        if (IsPlayerMove())
+        {
+            if (piece == EGamePiece.SelectedRedStandard) return "red-piece picked";
+            if (piece == EGamePiece.SelectedBlackStandard) return "black-piece picked";
+            if (piece == EGamePiece.SelectedRedKing) return "red-king picked";
+            if (piece == EGamePiece.SelectedBlackKing) return "black-king picked";
+        }
+        if (piece == EGamePiece.BlackStandard || piece == EGamePiece.SelectedBlackStandard) return "black-piece";
+        if (piece == EGamePiece.RedStandard || piece == EGamePiece.SelectedRedStandard) return "red-piece";
+        if (piece == EGamePiece.RedKing || piece == EGamePiece.SelectedRedKing) return "red-king";
+        if (piece == EGamePiece.BlackKing || piece == EGamePiece.SelectedBlackKing) return "black-king";
         return "unknown";
     }
 
     string CheckIfUnknown(EGamePiece? piece)
     {
-        if (piece == EGamePiece.Unknown) return "unknown";
-        if (piece == EGamePiece.Forced) return "forced";
+        if (IsPlayerMove())
+        {
+            if (piece == EGamePiece.Unknown) return "unknown";
+            if (piece == EGamePiece.Forced) return "forced";
+        }
         return "";
+    }
+
+    bool IsAiMove()
+    {
+        if (Model.Brain.NextMoveByBlack() && Model.PlayerNo == 1 && Model.CheckersGame.Player2Type == EPlayerType.Ai)
+        {
+            return true;
+        }
+        
+        if (!Model.Brain.NextMoveByBlack() && Model.PlayerNo == 0 && Model.CheckersGame.Player1Type == EPlayerType.Ai)
+        {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    bool IsPlayerMove()
+    {
+        if (Model.Brain.NextMoveByBlack() && Model.PlayerNo == 1)
+        {
+            return true;
+        }
+        
+        if (!Model.Brain.NextMoveByBlack() && Model.PlayerNo == 0)
+        {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    string GetPlayerMoveStatus()
+    {
+        return IsPlayerMove() ? "Make a move!!!" : "Please wait for opponents move!";
+    }
+    
+    string GetPlayerName()
+    {
+        return Model.PlayerNo == 0 ? Model.CheckersGame.Player1Name : Model.CheckersGame.Player2Name;
+    }
+
+    private bool CheckIfGameOver()
+    {
+        for (int x = 0; x < Model.Brain.GetBoard().Length; x++)
+        {
+            for (int y = 0; y < Model.Brain.GetBoard()[0].Length; y++)
+            {
+                if (Model.Brain.GetBoard()[x][y] == EGamePiece.Forced || Model.Brain.GetBoard()[x][y] == EGamePiece.Unknown)
+                {
+                    return false;
+                }
+            }
+        }
+        
+        if (!Model.Brain.ExistenceOfForcedJumps())
+        {
+            for (int x = 0; x < Model.Brain.GetBoard().Length; x++)
+            {
+                int diff = x % 2 == 0 ? 1 : 0;
+
+                for (int y = diff; y < Model.Brain.GetBoard()[0].Length; y += 2)
+                {
+                    if (Model.Brain.JumpsAvailableWithoutForced())
+                    {
+                        return false;
+                    }
+                    
+                    if (Model.Brain.PieceHasMoves(x, y))
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        else
+        {
+            return false;
+        }
+        return true;
+    }
+
+    private void SaveOutcome()
+    {
+        Model.CheckersGame.GameWonByPlayer = Model.Brain.NextMoveByBlack() ? Model.CheckersGame.Player1Name : Model.CheckersGame.Player2Name;
+        Model.CheckersGame.GameOverAt = DateTime.Now;
+        Model._repo.SaveChanges();
     }
 }
