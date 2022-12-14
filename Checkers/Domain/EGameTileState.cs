@@ -1,9 +1,9 @@
 ﻿namespace Domain;
 
-public enum EGamePiece
+public enum EGameTileState
 {
-    Unknown,
-    Forced,
+    PossibleMove,
+    ForcedMove,
     RedStandard,
     BlackStandard,
     RedKing,

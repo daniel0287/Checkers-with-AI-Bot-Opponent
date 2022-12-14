@@ -97,29 +97,29 @@ else
 
 @functions
 {
-    string GetCellBgrClass(EGamePiece? piece)
+    string GetCellBgrClass(EGameTileState? piece)
     {
         if (piece == null) return "noPieceHere";
         if (IsPlayerMove())
         {
-            if (piece == EGamePiece.SelectedRedStandard) return "red-piece picked";
-            if (piece == EGamePiece.SelectedBlackStandard) return "black-piece picked";
-            if (piece == EGamePiece.SelectedRedKing) return "red-king picked";
-            if (piece == EGamePiece.SelectedBlackKing) return "black-king picked";
+            if (piece == EGameTileState.SelectedRedStandard) return "red-piece picked";
+            if (piece == EGameTileState.SelectedBlackStandard) return "black-piece picked";
+            if (piece == EGameTileState.SelectedRedKing) return "red-king picked";
+            if (piece == EGameTileState.SelectedBlackKing) return "black-king picked";
         }
-        if (piece == EGamePiece.BlackStandard || piece == EGamePiece.SelectedBlackStandard) return "black-piece";
-        if (piece == EGamePiece.RedStandard || piece == EGamePiece.SelectedRedStandard) return "red-piece";
-        if (piece == EGamePiece.RedKing || piece == EGamePiece.SelectedRedKing) return "red-king";
-        if (piece == EGamePiece.BlackKing || piece == EGamePiece.SelectedBlackKing) return "black-king";
+        if (piece == EGameTileState.BlackStandard || piece == EGameTileState.SelectedBlackStandard) return "black-piece";
+        if (piece == EGameTileState.RedStandard || piece == EGameTileState.SelectedRedStandard) return "red-piece";
+        if (piece == EGameTileState.RedKing || piece == EGameTileState.SelectedRedKing) return "red-king";
+        if (piece == EGameTileState.BlackKing || piece == EGameTileState.SelectedBlackKing) return "black-king";
         return "unknown";
     }
 
-    string CheckIfUnknown(EGamePiece? piece)
+    string CheckIfUnknown(EGameTileState? piece)
     {
         if (IsPlayerMove())
         {
-            if (piece == EGamePiece.Unknown) return "unknown";
-            if (piece == EGamePiece.Forced) return "forced";
+            if (piece == EGameTileState.PossibleMove) return "unknown";
+            if (piece == EGameTileState.ForcedMove) return "forced";
         }
         return "";
     }
@@ -170,7 +170,7 @@ else
         {
             for (int y = 0; y < Model.Brain.GetBoard()[0].Length; y++)
             {
-                if (Model.Brain.GetBoard()[x][y] == EGamePiece.Forced || Model.Brain.GetBoard()[x][y] == EGamePiece.Unknown)
+                if (Model.Brain.GetBoard()[x][y] == EGameTileState.ForcedMove || Model.Brain.GetBoard()[x][y] == EGameTileState.PossibleMove)
                 {
                     return false;
                 }

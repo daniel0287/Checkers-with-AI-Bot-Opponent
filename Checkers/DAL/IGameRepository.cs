@@ -4,7 +4,7 @@ namespace DAL;
 
 public interface IGameRepository : IBaseRepository
 {
-    List<CheckersGame> getAll();
+    List<CheckersGame> GetAll();
     CheckersGame? GetGame(int? id);
     CheckersGame AddGame(CheckersGame game);
 }

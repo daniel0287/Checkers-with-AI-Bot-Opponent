@@ -116,7 +116,7 @@ public class Game
         var index = 0;
         foreach (var state in _gameStatesRepo.GetPreviousGameStatesList())
         {
-            choices[index] = state;
+            choices[index] = state!;
             index += 1;
         }
         choices[index] = "Delete Load Game";
@@ -143,7 +143,7 @@ public class Game
         var index = 0;
         foreach (var state in _gameStatesRepo.GetPreviousGameStatesList())
         {
-            choices[index] = state;
+            choices[index] = state!;
             index += 1;
         }
         choices[index] = "Back";

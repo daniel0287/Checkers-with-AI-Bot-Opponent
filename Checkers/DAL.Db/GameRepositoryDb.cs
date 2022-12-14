@@ -9,7 +9,7 @@ public class GameRepositoryDb : BaseRepository, IGameRepository
     {
     }
     
-    public List<CheckersGame> getAll()
+    public List<CheckersGame> GetAll()
     {
         return Ctx.CheckersGames
             .Include(c => c.CheckersOption)

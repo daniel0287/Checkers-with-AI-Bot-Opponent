@@ -2,6 +2,6 @@
 
 public class CheckersState
 {
-    public EGamePiece?[][] GameBoard { get; set; } = default!;
+    public EGameTileState?[][] GameBoard { get; set; } = default!;
     public bool NextMoveByBlack { get; set; }
 }
