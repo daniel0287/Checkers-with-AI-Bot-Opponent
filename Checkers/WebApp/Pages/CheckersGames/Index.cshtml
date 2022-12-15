@@ -1,0 +1,109 @@
+@page
+@using Domain
+@model WebApp.Pages_CheckersGames.IndexModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Games</h1>
+
+<p>
+    <a asp-page="Create">Create New</a>
+</p>
+
+<form method="get">
+    <label for="playerName">Player Name:</label>
+    <input type="text" name="playerName" id="playerName" />
+    <button type="submit">Apply filter</button>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersGame[0].StartedAt)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersGame[0].GameOverAt)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersGame[0].GameWonByPlayer)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersGame[0].Player1Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersGame[0].Player1Type)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersGame[0].Player2Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersGame[0].Player2Type)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersGame[0].CheckersOption)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.CheckersGame.Where(x =>
+    string.IsNullOrEmpty(Request.Query["playerName"]) ||
+    x.Player1Name.Contains(Request.Query["playerName"]) || 
+    x.Player2Name.Contains(Request.Query["playerName"]))) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.StartedAt)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.GameOverAt)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.GameWonByPlayer)
+            </td>
+            <td>
+                @if (item.Player1Type == EPlayerType.Human)
+                {
+                    <text>Continue as:
+                    <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerNo="0">
+                        @Html.DisplayFor(modelItem => item.Player1Name)
+                    </a>
+                    </text>
+                }
+                else
+                {
+                    @Html.DisplayFor(modelItem => item.Player1Name)
+                }
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Player1Type)
+            </td>
+            <td>
+                @if (item.Player2Type == EPlayerType.Human)
+                {
+                    <text>Continue as:
+                    <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerNo="1">
+                        @Html.DisplayFor(modelItem => item.Player2Name)
+                    </a>
+                    </text>
+                }
+                else
+                {
+                    @Html.DisplayFor(modelItem => item.Player2Name)
+                }
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Player2Type)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CheckersOption!.Name)
+            </td>
+            <td>
+                <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

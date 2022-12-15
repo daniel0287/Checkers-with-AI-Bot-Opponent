@@ -1,0 +1,81 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+td {
+  background-color: #BA7A3A;
+  width: 65px;
+  height: 65px;
+  text-align: center;
+}
+
+.noPieceHere {
+  background-color: #F0D2B4;
+}
+
+.black-piece {
+  width: 45px;
+  height: 45px;
+  padding: 12px;
+  background-color: black;
+  border: 1px solid white;
+  border-radius: 50px;
+}
+
+.red-piece {
+  width: 45px;
+  height: 45px;
+  padding: 12px;
+  background-color: red;
+  border: 1px solid white;
+  border-radius: 50px;
+}
+
+.black-king {
+  width: 45px;
+  height: 45px;
+  padding: 12px;
+  background-color: black;
+  border: 4px solid yellow;
+  border-radius: 50px;
+}
+
+.red-king {
+  width: 45px;
+  height: 45px;
+  padding: 12px;
+  background-color: red;
+  border: 4px solid yellow;
+  border-radius: 50px;
+}
+
+.picked {
+  background-color: yellow;
+}
+
+.unknown, .forced {
+  background-color: grey;
+}
+
+p {
+  display: inline-block;
+}
+
+span {
+  display: inline-block;
+}
