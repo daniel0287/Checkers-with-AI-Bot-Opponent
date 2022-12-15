@@ -24,7 +24,7 @@ public class Play : PageModel
 
     public int PlayerNo { get; set; }
 
-    public async Task<IActionResult> OnGet(int? id, int? playerNo, int? x, int? y, bool? checkAi)
+    public async Task<IActionResult> OnGet(int? id, int? playerNo, int? x, int? y, bool? checkAi, bool? undoMove)
     {
         if (id == null)
         {
@@ -51,7 +51,7 @@ public class Play : PageModel
         CheckersGame = game;
 
         Brain = new CheckersBrain(game.CheckersOption, game.CheckersGameStates?.LastOrDefault());
-        
+
         if (x != null && y != null)
         {
             Brain.MakeAMove(x.Value, y.Value);

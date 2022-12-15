@@ -2,7 +2,6 @@
 @using Domain
 @model WebApp.Pages_CheckersGames.Play
 
-
 @if (CheckIfGameOver())
 {
     SaveOutcome();
@@ -85,7 +84,7 @@ else
 </table>
 @section Scripts
 {
-    @if (!IsPlayerMove() || IsAiMove())
+    @if ((!IsPlayerMove() || IsAiMove()) && !CheckIfGameOver())
     {
         <script>
             setTimeout( () => {
