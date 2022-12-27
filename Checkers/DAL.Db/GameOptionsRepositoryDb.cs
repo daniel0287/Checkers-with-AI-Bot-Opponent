@@ -15,11 +15,11 @@ public class GameOptionsRepositoryDb : BaseRepository, IGameOptionsRepository
             .Select(o => o.Name)
             .ToList();
 
-    public CheckersOption GetGameOptions(string id)
+    public CheckersOption GetGameOptions(string name)
     {
         return Ctx
             .CheckersOptions
-            .First(o => o.Name == id);
+            .First(o => o.Name == name);
     }
 
     public void SaveGameOptions(string id, CheckersOption option)

@@ -189,6 +189,11 @@ public class CheckersBrain
         }
     }
 
+    public void UndoMove()
+    {
+        
+    }
+    
     public void MakeAMoveByAi()
     {
         var tempBoard = JsonSerializer.Deserialize<EGameTileState?[][]>(JsonSerializer.Serialize(GetBoard()));

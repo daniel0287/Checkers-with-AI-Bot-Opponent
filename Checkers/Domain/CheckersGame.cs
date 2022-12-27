@@ -22,4 +22,16 @@ public class CheckersGame
     public CheckersOption? CheckersOption { get; set; }
 
     public ICollection<CheckersGameState>? CheckersGameStates { get; set; }
+    
+    public override string ToString()
+    {
+        if (GameOverAt != null)
+        {
+            return $"Started at: {StartedAt}, Game over at: {GameOverAt}, Game winner: {GameWonByPlayer}, Player 1 name: {Player1Name}, Player 1 type: {Player1Type}," +
+                   $" Player 2 name: {Player2Name}, Player 2 type: {Player2Type}, Option: {CheckersOption!.Name}";
+        }
+        return $"Started at: {StartedAt}, Player 1 name: {Player1Name}, Player 1 type: {Player1Type}," +
+               $" Player 2 name: {Player2Name}, Player 2 type: {Player2Type}, Option: {CheckersOption!.Name}";
+
+        }
 }

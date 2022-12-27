@@ -13,6 +13,7 @@ public class GameRepositoryDb : BaseRepository, IGameRepository
     {
         return Ctx.CheckersGames
             .Include(c => c.CheckersOption)
+            .Include(g => g.CheckersGameStates)
             .OrderBy(o => o.StartedAt)
             .ToList();
     }
@@ -31,5 +32,12 @@ public class GameRepositoryDb : BaseRepository, IGameRepository
         Ctx.SaveChanges();
 
         return game;
+    }
+
+    public void DeleteGame(int id)
+    {
+        var gameFromDb = GetGame(id);
+        Ctx.CheckersGames.Remove(gameFromDb);
+        Ctx.SaveChanges();
     }
 }

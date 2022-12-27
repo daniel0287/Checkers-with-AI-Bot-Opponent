@@ -51,7 +51,7 @@ public class Play : PageModel
         CheckersGame = game;
 
         Brain = new CheckersBrain(game.CheckersOption, game.CheckersGameStates?.LastOrDefault());
-
+        
         if (x != null && y != null)
         {
             Brain.MakeAMove(x.Value, y.Value);

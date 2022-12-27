@@ -24,6 +24,10 @@ namespace WebApp.Pages_CheckersGames
 
         public async Task OnGetAsync()
         {
+            // ask game from the db
+            // initialize brain with game state
+            // make move
+            // save to db
             CheckersGame = _repo.GetAll();
         }
     }
